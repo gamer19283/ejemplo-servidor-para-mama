@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+    <div class="contenedor">
+        <input type="text" id="entradaUsuario" class="recuadro" placeholder="ej: 1+1">
+    </div>
+
+    <div class="contenedor">
+        <button id="botonCalcular" class="boton">Calcular</button>
+    </div>
+
+    <div class="contenedor">
+        <input type="text" id="resultado" class="recuadro" placeholder="ej: 2" readonly>
+    </div>
+
+    <!-- AQUÍ VA EL JAVASCRIPT DEL NAVEGADOR -->
+    <script>
+        console.log("[HTML] Página cargada y JavaScript listo.");
+
+        document.getElementById('botonCalcular').addEventListener('click', async () => {
+            const expresion = document.getElementById('entradaUsuario').value.trim();
+            const cajaResultado = document.getElementById('resultado');
+
+            console.log(`[HTML] Botón presionado. Expresión: "${expresion}"`);
+
+            if (!expresion) {
+                cajaResultado.value = 'Escribe algo';
+                return;
+            }
+
+            cajaResultado.value = 'Calculando...';
+
+            try {
+                console.log("[HTML] Enviando petición a Node.js...");
+                const respuesta = await fetch('http://localhost:8080/calcular', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ expresion: expresion })
+                });
+
+                console.log(`[HTML] Respuesta recibida de Node. Código HTTP: ${respuesta.status}`);
+                
+                const datos = await respuesta.json();
+                console.log("[HTML] Datos decodificados de Node:", datos);
+
+                cajaResultado.value = datos.ok
+                    ? datos.resultado
+                    : 'Error: ' + (datos.error || 'desconocido');
+
+            } catch (e) {
+                console.error("[HTML] ERROR en el fetch:", e);
+                cajaResultado.value = 'Error de conexión';
+            }
+        });
+    </script>
+
+</body>
+</html>
