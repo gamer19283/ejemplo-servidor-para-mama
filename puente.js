@@ -9,7 +9,6 @@ const TIPOS_MIME = {
     '.html': 'text/html; charset=utf-8',
     '.css':  'text/css; charset=utf-8',
     '.js':   'application/javascript; charset=utf-8',
-    '.json': 'application/json; charset=utf-8'
 };
 
 const servidor = http.createServer((req, res) => {
@@ -24,33 +23,24 @@ const servidor = http.createServer((req, res) => {
     }
 
     if (req.method === 'POST' && req.url === '/calcular') {
-        let cuerpo = '';
-        req.on('data', trozo => cuerpo += trozo);
+        let expresion = '';
+        req.on('data', trozo => expresion += trozo);
         req.on('end', () => {
-            let expresion = '';
-            try {
-                expresion = JSON.parse(cuerpo).expresion || '';
-            } catch (e) {
-                res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ ok: false, error: 'JSON inválido' }));
-                return;
-            }
-
             if (!expresion.trim()) {
-                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ ok: false, error: 'Expresión vacía' }));
+                res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end('ERROR: Expresión vacía');
                 return;
             }
 
-            // En Windows a veces 'python' falla y hay que usar 'py'
+            // Se llama a Python pasándole el texto plano
             execFile('python', ['calculadora.py', expresion], (error, stdout) => {
                 if (error) {
-                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                    res.end(JSON.stringify({ ok: false, error: 'Error ejecutando Python' }));
+                    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    res.end('ERROR: Fallo al ejecutar Python');
                     return;
                 }
-                // Enviamos la respuesta limpia de Python
-                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                // Se envía la respuesta de Python como texto plano
+                res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
                 res.end(stdout.trim());
             });
         });
